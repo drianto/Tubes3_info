@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QRadioButton, QButtonGroup, QSpinBox,
-    QScrollArea
+    QScrollArea, QGroupBox
 )
 from PyQt5.QtCore import Qt
 
@@ -52,6 +52,7 @@ class CVAnalyzerApp(QWidget):
         main_layout.addLayout(topresult_layout)
 
         self.search_button = QPushButton("Search")
+        self.search_button.clicked.connect(self.search)
         main_layout.addWidget(self.search_button)
 
         self.result_area = QScrollArea()
@@ -63,3 +64,34 @@ class CVAnalyzerApp(QWidget):
 
         main_layout.addWidget(self.result_area)
         self.setLayout(main_layout)
+
+    def search(self):
+        for i in reversed(range(self.result_container.count())):
+            widget = self.result_container.itemAt(i).widget()
+            if widget:
+                widget.deleteLater()
+
+        # Result card with dummy data
+        for i in range(self.topresult_spin.value()):
+            self.result_container.addWidget(self.create_result_card(f"Person {i+1}", 1))
+
+    def create_result_card(self, name, match_count):
+        card = QGroupBox()
+        layout = QVBoxLayout()
+
+        name_label = QLabel(f"<b>{name}</b>")
+        match_label = QLabel(f"Matched {match_count} keyword(s)")
+        summary_button = QPushButton("Summary")
+        view_button = QPushButton("View CV")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(summary_button)
+        btn_layout.addWidget(view_button)
+
+        layout.addWidget(name_label)
+        layout.addWidget(match_label)
+        layout.addLayout(btn_layout)
+
+        card.setLayout(layout)
+        card.setStyleSheet("QGroupBox { border: 1px solid gray; border-radius: 8px; padding: 8px; }")
+        return card
