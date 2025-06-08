@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
     QScrollArea, QGroupBox, QSizePolicy
 )
 from PyQt5.QtCore import Qt
+from pages.summary import SummaryWindow
 
 class CVAnalyzerApp(QWidget):
     def __init__(self):
@@ -119,6 +120,8 @@ class CVAnalyzerApp(QWidget):
         summary_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         view_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+        summary_button.clicked.connect(self.open_summary_window)
+
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(summary_button)
         btn_layout.addWidget(view_button)
@@ -129,3 +132,7 @@ class CVAnalyzerApp(QWidget):
 
         card.setLayout(layout)
         return card
+
+    def open_summary_window(self):
+        self.summary_window = SummaryWindow()
+        self.summary_window.show()
