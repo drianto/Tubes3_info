@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
+from pages.view_cv import ViewCVWindow
 
 class CVAnalyzerApp(QWidget):
     def __init__(self):
@@ -115,16 +116,17 @@ class CVAnalyzerApp(QWidget):
         name_label = QLabel(f"<b>{name}</b>")
         match_label = QLabel(f"Matched <b>{match_count}</b> keyword(s)")
         summary_button = QPushButton("📄 Summary")
-        view_button = QPushButton("👁️ View CV")
+        view_cv_button = QPushButton("👁️ View CV")
 
         summary_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        view_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        view_cv_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         summary_button.clicked.connect(self.open_summary_window)
+        view_cv_button.clicked.connect(self.open_view_cv_window)
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(summary_button)
-        btn_layout.addWidget(view_button)
+        btn_layout.addWidget(view_cv_button)
 
         layout.addWidget(name_label)
         layout.addWidget(match_label)
@@ -136,3 +138,7 @@ class CVAnalyzerApp(QWidget):
     def open_summary_window(self):
         self.summary_window = SummaryWindow()
         self.summary_window.show()
+
+    def open_view_cv_window(self):
+        self.view_cv_window = ViewCVWindow()
+        self.view_cv_window.show()
