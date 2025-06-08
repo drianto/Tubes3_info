@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QRadioButton, QButtonGroup, QSpinBox,
-    QScrollArea, QGroupBox, QSizePolicy
+    QScrollArea, QGroupBox, QSizePolicy, QGridLayout
 )
 from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
@@ -11,7 +11,7 @@ class CVAnalyzerApp(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Info")
-        self.setGeometry(600, 250, 800, 600)
+        self.setGeometry(600, 250, 800, 700)
         self.setStyleSheet("""
             QWidget {
                 font-family: Segoe UI, sans-serif;
@@ -33,6 +33,9 @@ class CVAnalyzerApp(QWidget):
                 background-color: #f9f9f9;
             }
         """)
+        self.current_page = 0
+        self.cards_per_page = 4
+        self.all_results = []
         self.initUI()
 
     def initUI(self):
@@ -99,14 +102,82 @@ class CVAnalyzerApp(QWidget):
         self.setLayout(main_layout)
 
     def search(self):
+        self.all_results = [
+            {"name": f"Person {i+1}", "match_count": 1} 
+            for i in range(self.topresult_spin.value())
+        ]
+        self.current_page = 0
+        self.update_result_view()
+
+    def update_result_view(self):
         for i in reversed(range(self.result_container.count())):
             widget = self.result_container.itemAt(i).widget()
             if widget:
-                widget.deleteLater()
+                widget.setParent(None)
 
-        # Result card with dummy data
-        for i in range(self.topresult_spin.value()):
-            self.result_container.addWidget(self.create_result_card(f"Person {i+1}", 1))
+        container_layout = QVBoxLayout()
+        container_layout.setSpacing(10)
+
+        grid_layout = QGridLayout()
+        grid_layout.setSpacing(20)
+        grid_layout.setContentsMargins(10, 10, 10, 10)
+
+        start_index = self.current_page * self.cards_per_page
+        end_index = min(start_index + self.cards_per_page, len(self.all_results))
+        results_to_show = self.all_results[start_index:end_index]
+
+        for i, data in enumerate(results_to_show):
+            card = self.create_result_card(data["name"], data["match_count"])
+            card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            row, col = i // 2, i % 2
+            grid_layout.addWidget(card, row, col)
+
+        grid_widget = QWidget()
+        grid_widget.setLayout(grid_layout)
+
+        container_layout.addWidget(grid_widget)
+
+        if len(results_to_show) < self.cards_per_page:
+            container_layout.addStretch()
+
+        total_pages = (len(self.all_results) + self.cards_per_page - 1) // self.cards_per_page
+        page_label = QLabel(f"Page {self.current_page + 1} of {total_pages}")
+        page_label.setAlignment(Qt.AlignCenter)
+
+        nav_layout = QHBoxLayout()
+        prev_button = QPushButton("← Previous")
+        next_button = QPushButton("Next →")
+
+        prev_button.setEnabled(self.current_page > 0)
+        next_button.setEnabled(end_index < len(self.all_results))
+
+        prev_button.clicked.connect(self.go_to_prev_page)
+        next_button.clicked.connect(self.go_to_next_page)
+
+        nav_layout.addWidget(prev_button)
+        nav_layout.addStretch()
+        nav_layout.addWidget(page_label)
+        nav_layout.addStretch()
+        nav_layout.addWidget(next_button)
+
+        nav_widget = QWidget()
+        nav_widget.setLayout(nav_layout)
+        nav_widget.setFixedHeight(50)
+
+        container_layout.addWidget(nav_widget)
+
+        page_widget = QWidget()
+        page_widget.setLayout(container_layout)
+
+        self.result_container.addWidget(page_widget)
+
+    def go_to_next_page(self):
+        self.current_page += 1
+        self.update_result_view()
+
+    def go_to_prev_page(self):
+        self.current_page -= 1
+        self.update_result_view()
 
     def create_result_card(self, name, match_count):
         card = QGroupBox()
