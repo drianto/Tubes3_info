@@ -117,7 +117,9 @@ class CVAnalyzerApp(QWidget):
         elif selected_algo == self.bm_radio:
             self.searcher.set_algorithm(BoyerMoore())
 
-        print(self.searcher.search(self.keyword_input.text(), self.topresult_spin.value()))
+        res, time = self.searcher.search(self.keyword_input.text(), self.topresult_spin.value())
+        print(res)
+        print(time)
 
 
         self.all_results = [

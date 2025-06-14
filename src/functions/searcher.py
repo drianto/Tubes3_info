@@ -2,6 +2,8 @@ from mysql.connector import Error
 from connection.db import MySQLConnection
 from functions.string_matcher.string_matcher import StringMatcher
 
+import time
+
 from PyPDF2 import PdfReader
 import os
 
@@ -24,7 +26,6 @@ class Searcher:
                         if(target_count == 0): break
                         path = os.path.abspath(f"../data/{row[3]}")
                         reader = PdfReader(path)
-                        print(f"processing {row[3]}")
                         found = 0;
                         for page in reader.pages:
                             text = page.extract_text()
@@ -42,8 +43,12 @@ class Searcher:
         pass
 
     def search(self, pattern, target_count):
+        start = time.time()
         self.algorithm.preprocessPattern(pattern)
-        return self._exact_match(target_count)
+        res = self._exact_match(target_count)
+        end = time.time()
+
+        return (res, (end - start) * 1000)
 
 
 
