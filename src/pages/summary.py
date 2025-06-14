@@ -6,11 +6,13 @@ from PyQt5.QtGui import QFont
 
 
 class SummaryWindow(QWidget):
-    def __init__(self):
+    def __init__(self, applicantData, applicationDetail):
         super().__init__()
         self.setWindowTitle("CV Summary")
         self.setGeometry(800, 200, 400, 500)
         self.setStyleSheet("font-family: 'Segoe UI'; font-size: 13px;")
+        self.applicantData = applicantData
+        self.applicationDetail = applicationDetail
         self.initUI()
 
     def initUI(self):
@@ -23,7 +25,9 @@ class SummaryWindow(QWidget):
         title.setFont(QFont("Segoe UI", 18, QFont.Bold))
         layout.addWidget(title)
 
-        info_box = self.create_section("Jawa Barak\n\nBirthdate: 32-13-202222\nAddress: Barak Kang Dedi\nPhone: 3336 7890")
+        name = self.applicantData[1] + " " + self.applicantData[2]
+        birth_date, address, phone = self.applicantData[3:]
+        info_box = self.create_section(f"{name}\n\nBirthdate: {birth_date}\nAddress: {address}\nPhone: {phone}")
         layout.addWidget(info_box)
 
         skill_box = self.create_section("Skills:\n\n[ Barak ]   [ OOO ]   [ Kang ]")

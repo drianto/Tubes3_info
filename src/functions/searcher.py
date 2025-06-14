@@ -43,12 +43,12 @@ class Searcher:
         pass
 
     def search(self, pattern, target_count):
-        start = time.time()
+        exact_start = time.time()
         self.algorithm.preprocessPattern(pattern)
         res = self._exact_match(target_count)
-        end = time.time()
+        exact_end = time.time()
 
-        return (res, (end - start) * 1000)
+        return (res, (exact_end - exact_start) * 1000)
 
 
 

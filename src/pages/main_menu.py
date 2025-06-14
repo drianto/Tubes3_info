@@ -3,10 +3,13 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QRadioButton, QButtonGroup, QSpinBox,
     QScrollArea, QGroupBox, QSizePolicy, QGridLayout
 )
+import os
+import webbrowser
 from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
 from pages.view_cv import ViewCVWindow
 
+from mysql.connector import Error
 from connection.db import MySQLConnection
 from functions.searcher import Searcher
 from functions.string_matcher.knuth_morris_pratt import KnuthMorrisPratt
@@ -118,14 +121,12 @@ class CVAnalyzerApp(QWidget):
             self.searcher.set_algorithm(BoyerMoore())
 
         res, time = self.searcher.search(self.keyword_input.text(), self.topresult_spin.value())
-        print(res)
+        for a in res:
+            print(a)
         print(time)
 
 
-        self.all_results = [
-            {"name": f"Person {i+1}", "match_count": 1}
-            for i in range(self.topresult_spin.value())
-        ]
+        self.all_results = res
 
         self.current_page = 0
         self.update_result_view()
@@ -148,7 +149,14 @@ class CVAnalyzerApp(QWidget):
         results_to_show = self.all_results[start_index:end_index]
 
         for i, data in enumerate(results_to_show):
-            card = self.create_result_card(data["name"], data["match_count"])
+            try:
+                with self.connection as cursor:
+                    cursor.execute("SELECT * FROM ApplicantProfile WHERE applicant_id = " + str(data[0][1]));
+                    applicant = cursor.fetchone();
+                    card = self.create_result_card(applicant, data)
+            except Error as e:
+                # card = self.create_result_card("N/A", data)
+                print(e)
             card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             row, col = i // 2, i % 2
             grid_layout.addWidget(card, row, col)
@@ -200,10 +208,14 @@ class CVAnalyzerApp(QWidget):
         self.current_page -= 1
         self.update_result_view()
 
-    def create_result_card(self, name, match_count):
+    def create_result_card(self, applicantData, applicationDetail):
         card = QGroupBox()
         layout = QVBoxLayout()
         layout.setSpacing(6)
+
+        name = applicantData[2]
+        match_count = applicationDetail[1]
+        pdf_path = applicationDetail[0][3]
 
         name_label = QLabel(f"<b>{name}</b>")
         match_label = QLabel(f"Matched <b>{match_count}</b> keyword(s)")
@@ -213,8 +225,8 @@ class CVAnalyzerApp(QWidget):
         summary_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         view_cv_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        summary_button.clicked.connect(self.open_summary_window)
-        view_cv_button.clicked.connect(self.open_view_cv_window)
+        summary_button.clicked.connect(lambda: self.open_summary_window(applicantData, applicationDetail))
+        view_cv_button.clicked.connect(lambda: self.open_view_cv_window(pdf_path))
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(summary_button)
@@ -227,10 +239,11 @@ class CVAnalyzerApp(QWidget):
         card.setLayout(layout)
         return card
 
-    def open_summary_window(self):
-        self.summary_window = SummaryWindow()
+    def open_summary_window(self, applicantData, applicationDetail):
+        self.summary_window = SummaryWindow(applicantData, applicationDetail)
         self.summary_window.show()
 
-    def open_view_cv_window(self):
-        self.view_cv_window = ViewCVWindow()
-        self.view_cv_window.show()
+    def open_view_cv_window(self, path):
+        webbrowser.open(os.path.abspath("../data/"+path))
+        # self.view_cv_window = ViewCVWindow()
+        # self.view_cv_window.show()
