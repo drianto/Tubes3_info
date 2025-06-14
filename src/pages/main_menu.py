@@ -7,8 +7,13 @@ from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
 from pages.view_cv import ViewCVWindow
 
+from connection.db import MySQLConnection
+from functions.searcher import Searcher
+from functions.string_matcher.knuth_morris_pratt import KnuthMorrisPratt
+from functions.string_matcher.boyer_moore import BoyerMoore
+
 class CVAnalyzerApp(QWidget):
-    def __init__(self):
+    def __init__(self, connection: MySQLConnection):
         super().__init__()
         self.setWindowTitle("Info")
         self.setGeometry(600, 250, 800, 700)
@@ -36,6 +41,7 @@ class CVAnalyzerApp(QWidget):
         self.current_page = 0
         self.cards_per_page = 4
         self.all_results = []
+        self.connection = connection
         self.initUI()
 
     def initUI(self):
@@ -67,6 +73,8 @@ class CVAnalyzerApp(QWidget):
         self.algo_group = QButtonGroup()
         self.algo_group.addButton(self.kmp_radio)
         self.algo_group.addButton(self.bm_radio)
+
+        self.searcher = Searcher(self.connection, KnuthMorrisPratt())
 
         algo_layout.addWidget(algo_label)
         algo_layout.addWidget(self.kmp_radio)
@@ -102,10 +110,21 @@ class CVAnalyzerApp(QWidget):
         self.setLayout(main_layout)
 
     def search(self):
+
+        selected_algo = self.algo_group.checkedButton()
+        if selected_algo == self.kmp_radio:
+            self.searcher.set_algorithm(KnuthMorrisPratt())
+        elif selected_algo == self.bm_radio:
+            self.searcher.set_algorithm(BoyerMoore())
+
+        print(self.searcher.search(self.keyword_input.text(), self.topresult_spin.value()))
+
+
         self.all_results = [
-            {"name": f"Person {i+1}", "match_count": 1} 
+            {"name": f"Person {i+1}", "match_count": 1}
             for i in range(self.topresult_spin.value())
         ]
+
         self.current_page = 0
         self.update_result_view()
 
