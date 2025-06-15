@@ -25,6 +25,8 @@ class SectionScraper:
         "education",
         "education and training",
         "educational background",
+        "teaching experience",
+        "corporate experience"
     ]
 
     sections = skill_sections + experience_sections + education_sections + [
@@ -62,7 +64,7 @@ class SectionScraper:
         "volunteer work",
         "awards and publications",
         "activities and honors",
-        "volunteer associations"
+        "volunteer associations",
     ]
 
     def remove_prefix(text: str, prefix: str) -> str:
@@ -111,7 +113,41 @@ class SectionScraper:
             content: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
                 content = SectionScraper.remove_suffix(content, header)
-            return content
+            
+            # cheating by detecting "company name" to detect lines containing jobs
+            lines = content.splitlines()
+            output = []
+            keywords = [
+                "Director",
+                "Manager",
+                "Analyst",
+                "Specialist",
+                "Recruiter",
+                "Representative",
+                "Coordinator",
+                "Lead",
+                "Consultant",
+                "Volunteer",
+                "Assistant",
+                "Technician",
+                "Supervisor",
+                "Associate",
+                "Intern",
+                "Counselor",
+                "Advocate"
+            ]
+            for line in lines:
+                for keyword in keywords:
+                    if keyword in line.strip():
+                        output.extend(re.findall(f"[A-Z][a-zA-Z ]*{keyword}[a-zA-Z ]*", line.strip()))
+                        break
+                    elif "company name" != line.lower().strip() and "company name" in line.lower().strip():
+                        output.append(line)
+
+            if output:
+                return ", ".join(list(set(output)))
+            else:
+                return "Not Found"
         else:
             return "Not Found"
 
