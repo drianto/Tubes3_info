@@ -14,11 +14,8 @@ Untuk menjalankan program, diperlukan hal-hal berikut:
 
 
 ## Cara Menjalankan Program
-Setup uv virtual enviroment
 
-```bash
-  uv python install
-```
+
 
 Clone repository github
 
@@ -26,12 +23,24 @@ Clone repository github
   git clone https://github.com/drianto/Tubes3_info
 ```
 
-Jalankan Program
+Pindah Direktori
 
 ```bash
   cd src
 ```
-    
+Setup uv virtual enviroment
+
+```bash
+  uv python install
+```
+
+Jalankan docker untuk MySql
+
+```bash
+  docker compose up
+```
+Jalankan Program
+
 ```bash
   uv run main.py
 ```
