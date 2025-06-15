@@ -39,10 +39,10 @@ class PDFReader:
                 raise FileNotFoundError(f"The file at {path} does not exist.")
 
             raw_text = ""
-            print(abs_path)
+            # print(abs_path)
             reader = PyPDF2Reader(abs_path)
             for page in reader.pages:
-                raw_text += page.extract_text() or ""
+                raw_text += (page.extract_text() or "").lower()
 
             self.cache[path] = raw_text
             self.ready[path].set()

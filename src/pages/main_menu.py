@@ -20,7 +20,7 @@ class CVAnalyzerApp(QWidget):
     def __init__(self, connection: MySQLConnection):
         super().__init__()
         self.setWindowTitle("Info")
-        self.setGeometry(600, 250, 800, 700)
+        self.setGeometry(600, 250, 1600, 1400)
 
         self.current_page = 0
         self.cards_per_page = 4
@@ -44,7 +44,7 @@ class CVAnalyzerApp(QWidget):
 
         keyword_layout = QHBoxLayout()
         keyword_label = QLabel("Keywords:")
-        keyword_label.setFixedWidth(100)
+        keyword_label.setFixedWidth(120)
         self.keyword_input = QLineEdit()
         self.keyword_input.setPlaceholderText("e.g. Python, HTML, React")
         keyword_layout.addWidget(keyword_label)
@@ -53,7 +53,7 @@ class CVAnalyzerApp(QWidget):
 
         algo_layout = QHBoxLayout()
         algo_label = QLabel("Algorithm:")
-        algo_label.setFixedWidth(100)
+        algo_label.setFixedWidth(120)
         self.kmp_radio = QRadioButton("KMP")
         self.bm_radio = QRadioButton("Boyer-Moore")
         self.ac_radio = QRadioButton("Aho-Corasick")
@@ -75,7 +75,7 @@ class CVAnalyzerApp(QWidget):
 
         topresult_layout = QHBoxLayout()
         topresult_label = QLabel("Top Matches:")
-        topresult_label.setFixedWidth(100)
+        topresult_label.setFixedWidth(120)
         self.topresult_spin = QSpinBox()
         self.topresult_spin.setRange(1, 100)
         self.topresult_spin.setValue(5)
@@ -159,9 +159,10 @@ class CVAnalyzerApp(QWidget):
                     applicant = cursor.fetchone();
                     card = self.create_result_card(applicant, self.all_results[data])
             except Error as e:
-                # card = self.create_result_card("N/A", data)
+                card = None
                 print(e)
-            card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            if (card is None): return
+            card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             row, col = i // 2, i % 2
             grid_layout.addWidget(card, row, col)
             self.fade_in_widget(card)
@@ -232,8 +233,9 @@ class CVAnalyzerApp(QWidget):
         layout.setSpacing(6)
 
         name = applicantData[2]
-        occurrences = applicationDetail["occurences"]
-        total_match_count = sum(occurrences.values())
+        exact_occurrences = applicationDetail["exact_occurences"]
+        fuzzy_occurrences = applicationDetail["fuzzy_occurences"]
+        total_match_count = sum(exact_occurrences.values()) + sum(fuzzy_occurrences.values())
         pdf_path = applicationDetail["data"][2]
 
         name_label = QLabel(f"<b>{name}</b>")
@@ -241,12 +243,27 @@ class CVAnalyzerApp(QWidget):
 
         keyword_labels = []
         idx = 1
-        for (keyword, count) in occurrences.items():
+        found_occurences = {}
+        found_one = False
+        for (keyword, count) in exact_occurrences.items():
             if(count > 0):
-                label = QLabel(f"{idx}. {keyword}: {count} occurrence{'s' if count > 1 else ''}")
+                found_one = True
+                label = QLabel(f"{idx}. {keyword}: {count} exact occurrence{'s' if count > 1 else ''}")
+                found_occurences[keyword] = label
                 keyword_labels.append(label)
                 idx += 1
+        idx = 1
+        for (keyword, count) in fuzzy_occurrences.items():
+            if(count > 0):
+                found_one = True
+                if(keyword in found_occurences):
+                    found_occurences[keyword].setText(found_occurences[keyword].text() + f", {count} fuzzy occurence{'s' if count > 1 else ''}")
+                else:
+                    idx += 1
+                    label = QLabel(f"{idx}. {keyword}: {count} fuzzy occurrence{'s' if count > 1 else ''}")
+                    keyword_labels.append(label)
 
+        if not found_one: return None
         summary_button = QPushButton("📄 Summary")
         view_cv_button = QPushButton("👁️ View CV")
 
@@ -278,15 +295,20 @@ class CVAnalyzerApp(QWidget):
 
     def apply_theme(self):
         self.setStyleSheet("""
+
             QWidget {
                 font-family: 'Segoe UI', sans-serif;
-                font-size: 14px;
+                font-size: 20px;
                 background-color: #f0f4f8;
                 color: #000000;
             }
 
+            QLabel {
+                font-size: 20px;
+            }
+
             QLabel#TitleLabel {
-                font-size: 28px;
+                font-size: 32px;
                 font-weight: 700;
                 color: #0d47a1;
             }
@@ -309,6 +331,7 @@ class CVAnalyzerApp(QWidget):
                 border-radius: 6px;
                 padding: 8px 16px;
                 font-weight: bold;
+                font-size: 16px;
             }
 
             QPushButton:hover {
