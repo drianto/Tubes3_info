@@ -34,11 +34,13 @@ class PDFReader:
             if path in self.cache and self.ready[path].is_set():
                 return self.cache[path]
 
-            if not os.path.exists(path):
+            abs_path = os.path.abspath(f"../{path}")
+            if not os.path.exists(abs_path):
                 raise FileNotFoundError(f"The file at {path} does not exist.")
 
             raw_text = ""
-            reader = PyPDF2Reader(path)
+            print(abs_path)
+            reader = PyPDF2Reader(abs_path)
             for page in reader.pages:
                 raw_text += page.extract_text() or ""
 

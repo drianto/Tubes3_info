@@ -23,8 +23,7 @@ def preload_all():
                 return
 
             for row in records:
-                path = os.path.abspath(f"../{row[0]}")
-                pdf_reader.preload_pdf(path)
+                pdf_reader.preload_pdf(row[0])
     except Error as e:
         print(e)
 

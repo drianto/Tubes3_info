@@ -1,11 +1,13 @@
-from PyPDF2 import PdfReader
+from functions.pdf_reader import PDFReader
 from typing import List
 
 import re
-import os
 
 class SectionScraper:
     '''Scrapes sections out of PDF dumps'''
+
+    def __init__(self):
+        self.pdf_reader = PDFReader()
 
     skill_sections = [
         "skills",
@@ -72,32 +74,23 @@ class SectionScraper:
             if text.lower().startswith(prefix.lower()):
                 return text[len(prefix):]
         return text
-    
+
     def remove_suffix(text: str, suffix: str) -> str:
         if suffix:
             if text.lower().endswith(suffix.lower()):
                 return text[:-len(suffix)]
         return text
-    
-    def _read(self, cv_path) -> str:
-        path = os.path.abspath(f"../{cv_path}")
-        reader = PdfReader(path)
-
-        text = ""
-        for page in reader.pages:
-            text = "\n".join([text, page.extract_text()])
-        
-        return text
 
     def scrape_skills(self, cv_path: str) -> str:
-        text = self._read(cv_path)
+        # text = self._read(cv_path)
+        text = self.pdf_reader.open_pdf(cv_path)
         res = re.search(f"\n({'|'.join(self.skill_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
             content: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
                 content = SectionScraper.remove_suffix(content, header)
-            
+
             # Transform bullet points to comma separated list
             output = ", ".join(content.strip().split("\n"))
 
@@ -106,14 +99,14 @@ class SectionScraper:
             return "Not Found"
 
     def scrape_experience(self, cv_path: str) -> str:
-        text = self._read(cv_path)
+        text = self.pdf_reader.open_pdf(cv_path)
         res = re.search(f"\n({'|'.join(self.experience_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
             content: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
                 content = SectionScraper.remove_suffix(content, header)
-            
+
             # cheating by detecting "company name" to detect lines containing jobs
             lines = content.splitlines()
             output = []
@@ -154,14 +147,14 @@ class SectionScraper:
             return "Not Found"
 
     def scrape_education(self, cv_path: str) -> str:
-        text = self._read(cv_path)
+        text = self.pdf_reader.open_pdf(cv_path)
         res = re.search(f"\n({'|'.join(self.education_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
             content = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
                 content = SectionScraper.remove_suffix(content, header)
-            
+
             # scrape universities
             regex: List[str] = []
             regex.extend(re.findall("university of [a-zA-Z ]+", content, re.IGNORECASE))

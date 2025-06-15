@@ -34,7 +34,7 @@ class Searcher:
 
                     # if(target_count == 0): break
 
-                    path = os.path.abspath(f"../{row[3]}")
+                    path = row[3]
                     print("reading ", path)
 
                     text = self.pdf_reader.open_pdf(path)
@@ -67,9 +67,8 @@ class Searcher:
 
                 for row in records:
                     # if(target_count == 0): break
-                    path = os.path.abspath(f"../{row[3]}")
+                    path = row[3]
                     print("reading ", path)
-                    reader = PdfReader(path)
                     found = 0;
                     create_new = row[0] not in results
                     if create_new:
