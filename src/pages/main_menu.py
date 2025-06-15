@@ -94,12 +94,19 @@ class CVAnalyzerApp(QWidget):
         topresult_layout.addWidget(topresult_label)
         topresult_layout.addWidget(self.topresult_spin)
         topresult_layout.addStretch()
+
         main_layout.addLayout(topresult_layout)
 
         self.search_button = QPushButton("🔍 Search")
         self.search_button.setFixedHeight(32)
         self.search_button.clicked.connect(self.search)
         main_layout.addWidget(self.search_button)
+
+        time_layout = QHBoxLayout()
+        time_layout.setAlignment(Qt.AlignCenter)
+        self.scan_time_label = QLabel("")
+        time_layout.addWidget(self.scan_time_label)
+        main_layout.addLayout(time_layout)
 
         self.result_area = QScrollArea()
         self.result_container = QVBoxLayout()
@@ -129,13 +136,17 @@ class CVAnalyzerApp(QWidget):
         self.all_results = res
 
         self.current_page = 0
-        self.update_result_view()
+        self.update_result_view(exact_time, fuzzy_time)
 
-    def update_result_view(self):
+    def update_result_view(self, exact_time, fuzzy_time):
         for i in reversed(range(self.result_container.count())):
             widget = self.result_container.itemAt(i).widget()
             if widget:
                 widget.setParent(None)
+
+
+        time_label = f"Exact Time: {round(exact_time, 2)} ms. Fuzzy Time: {round(fuzzy_time, 2)} ms."
+        self.scan_time_label.setText(time_label)
 
         container_layout = QVBoxLayout()
         container_layout.setSpacing(10)
@@ -148,7 +159,6 @@ class CVAnalyzerApp(QWidget):
 
         start_index = self.current_page * self.cards_per_page
         end_index = min(start_index + self.cards_per_page, result_len)
-        # results_to_show = dict(list(self.all_results)[start_index:end_index])
         result_keys = itertools.islice(self.all_results.keys(), start_index, end_index)
 
         for i, data in enumerate(result_keys):
@@ -202,6 +212,7 @@ class CVAnalyzerApp(QWidget):
         page_widget.setLayout(container_layout)
 
         self.result_container.addWidget(page_widget)
+
 
     def go_to_next_page(self):
         self.current_page += 1
