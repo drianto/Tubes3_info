@@ -59,6 +59,9 @@ class AhoCorasick(StringMatcher):
         if self.text != string:
             self.text = string
             self.processed = False
+            
+            for key in self.matches:
+                self.matches[key] = []
 
         if not self.processed:
             current = self.root
