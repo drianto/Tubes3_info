@@ -8,7 +8,6 @@ import itertools
 import webbrowser
 from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
-from pages.view_cv import ViewCVWindow
 
 from mysql.connector import Error
 from connection.db import MySQLConnection
@@ -145,17 +144,19 @@ class CVAnalyzerApp(QWidget):
         grid_layout.setSpacing(20)
         grid_layout.setContentsMargins(10, 10, 10, 10)
 
-        start_index = self.current_page * self.cards_per_page
-        end_index = min(start_index + self.cards_per_page, len(self.all_results))
-        # results_to_show = dict(list(self.all_results)[start_index:end_index])
-        results_to_show = dict(itertools.islice(self.all_results.items(), start_index, end_index))
+        result_len = min(len(self.all_results), self.topresult_spin.value());
 
-        for i, data in enumerate(results_to_show):
+        start_index = self.current_page * self.cards_per_page
+        end_index = min(start_index + self.cards_per_page, result_len)
+        # results_to_show = dict(list(self.all_results)[start_index:end_index])
+        result_keys = itertools.islice(self.all_results.keys(), start_index, end_index)
+
+        for i, data in enumerate(result_keys):
             try:
                 with self.connection as cursor:
-                    cursor.execute("SELECT * FROM ApplicantProfile WHERE applicant_id = " + str(results_to_show[data]["data"][0]));
+                    cursor.execute("SELECT * FROM ApplicantProfile WHERE applicant_id = " + str(self.all_results[data]["data"][0]));
                     applicant = cursor.fetchone();
-                    card = self.create_result_card(applicant, results_to_show[data])
+                    card = self.create_result_card(applicant, self.all_results[data])
             except Error as e:
                 # card = self.create_result_card("N/A", data)
                 print(e)
@@ -168,10 +169,10 @@ class CVAnalyzerApp(QWidget):
 
         container_layout.addWidget(grid_widget)
 
-        if len(results_to_show) < self.cards_per_page:
+        if result_len < self.cards_per_page:
             container_layout.addStretch()
 
-        total_pages = (len(self.all_results) + self.cards_per_page - 1) // self.cards_per_page
+        total_pages = (result_len + self.cards_per_page - 1) // self.cards_per_page
         page_label = QLabel(f"Page {self.current_page + 1} of {total_pages}")
         page_label.setAlignment(Qt.AlignCenter)
 
@@ -217,13 +218,20 @@ class CVAnalyzerApp(QWidget):
 
         name = applicantData[2]
         occurrences = applicationDetail["occurences"]
-        match_count = 0
-        for val in occurrences.values():
-            match_count += val
+        total_match_count = sum(occurrences.values())
         pdf_path = applicationDetail["data"][2]
 
         name_label = QLabel(f"<b>{name}</b>")
-        match_label = QLabel(f"Matched <b>{match_count}</b> keyword(s)")
+        match_label = QLabel(f"<i>{total_match_count} Matched keywords:</i>")
+
+        keyword_labels = []
+        idx = 1
+        for (keyword, count) in occurrences.items():
+            if(count > 0):
+                label = QLabel(f"{idx}. {keyword}: {count} occurrence{'s' if count > 1 else ''}")
+                keyword_labels.append(label)
+                idx += 1
+
         summary_button = QPushButton("📄 Summary")
         view_cv_button = QPushButton("👁️ View CV")
 
@@ -239,6 +247,8 @@ class CVAnalyzerApp(QWidget):
 
         layout.addWidget(name_label)
         layout.addWidget(match_label)
+        for label in keyword_labels:
+            layout.addWidget(label)
         layout.addLayout(btn_layout)
 
         card.setLayout(layout)
@@ -250,5 +260,3 @@ class CVAnalyzerApp(QWidget):
 
     def open_view_cv_window(self, path):
         webbrowser.open(os.path.abspath("../"+path))
-        # self.view_cv_window = ViewCVWindow()
-        # self.view_cv_window.show()

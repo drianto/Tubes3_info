@@ -30,7 +30,7 @@ class Searcher:
 
                 for row in records:
 
-                    if(target_count == 0): break
+                    # if(target_count == 0): break
 
                     path = os.path.abspath(f"../{row[3]}")
                     print("reading ", path)
@@ -65,7 +65,7 @@ class Searcher:
                     return
 
                 for row in records:
-                    if(target_count == 0): break
+                    # if(target_count == 0): break
                     path = os.path.abspath(f"../{row[3]}")
                     print("reading ", path)
                     reader = PdfReader(path)
@@ -96,20 +96,25 @@ class Searcher:
     def search(self, patterns, target_count):
         pattern_list = patterns.split(",")
 
+        # do exact matching
         exact_start = time.time()
         self.exact_algo.preprocessPattern(pattern_list)
         res = self._exact_match(pattern_list, target_count)
         exact_end = time.time()
 
+        # check total matches
         total_cv_exact = len(res)
         cv_remaining = target_count - total_cv_exact
         if cv_remaining <= 0:
             return (res, (exact_end - exact_start) * 1000, 0)
         print("exact target < target_count")
 
+        # do fuzzy matching if not enough
         fuzzy_start = time.time()
         self._fuzzy_match(res, pattern_list, cv_remaining)
         fuzzy_end = time.time()
+
+        res = dict(sorted(res.items(), key=lambda item: sum(item[1]["occurences"].values()), reverse=True))
 
         return (res, (exact_end - exact_start) * 1000, (fuzzy_end - fuzzy_start) * 1000)
 
