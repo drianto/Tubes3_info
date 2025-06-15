@@ -14,6 +14,7 @@ from connection.db import MySQLConnection
 from functions.searcher import Searcher
 from functions.string_matcher.knuth_morris_pratt import KnuthMorrisPratt
 from functions.string_matcher.boyer_moore import BoyerMoore
+from functions.string_matcher.aho_corasick import AhoCorasick
 
 class CVAnalyzerApp(QWidget):
     def __init__(self, connection: MySQLConnection):
@@ -71,17 +72,20 @@ class CVAnalyzerApp(QWidget):
         algo_label.setFixedWidth(100)
         self.kmp_radio = QRadioButton("KMP")
         self.bm_radio = QRadioButton("Boyer-Moore")
+        self.ac_radio = QRadioButton("Aho-Corasick")
         self.kmp_radio.setChecked(True)
 
         self.algo_group = QButtonGroup()
         self.algo_group.addButton(self.kmp_radio)
         self.algo_group.addButton(self.bm_radio)
+        self.algo_group.addButton(self.ac_radio)
 
         self.searcher = Searcher(self.connection, KnuthMorrisPratt())
 
         algo_layout.addWidget(algo_label)
         algo_layout.addWidget(self.kmp_radio)
         algo_layout.addWidget(self.bm_radio)
+        algo_layout.addWidget(self.ac_radio)
         algo_layout.addStretch()
         main_layout.addLayout(algo_layout)
 
@@ -126,6 +130,8 @@ class CVAnalyzerApp(QWidget):
             self.searcher.set_algorithm(KnuthMorrisPratt())
         elif selected_algo == self.bm_radio:
             self.searcher.set_algorithm(BoyerMoore())
+        elif selected_algo == self.ac_radio:
+            self.searcher.set_algorithm(AhoCorasick())
 
         res, exact_time, fuzzy_time = self.searcher.search(self.keyword_input.text(), self.topresult_spin.value())
         for a in res.values():
