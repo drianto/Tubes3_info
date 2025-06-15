@@ -71,7 +71,7 @@ class Searcher:
                     reader = PdfReader(path)
                     found = 0;
                     create_new = row[0] not in results
-                    if not create_new:
+                    if create_new:
                         occurences = {key: 0 for key in patterns}
                     for page in reader.pages:
                         for pattern in patterns:
