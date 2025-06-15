@@ -1,4 +1,5 @@
 from PyPDF2 import PdfReader
+from typing import List
 
 import re
 import os
@@ -91,12 +92,12 @@ class SectionScraper:
         res = re.search(f"\n({'|'.join(self.skill_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            headerless: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            content: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
-                headerless = SectionScraper.remove_suffix(headerless, header)
+                content = SectionScraper.remove_suffix(content, header)
             
             # Transform bullet points to comma separated list
-            output = ", ".join(headerless.strip().split("\n"))
+            output = ", ".join(content.strip().split("\n"))
 
             return output
         else:
@@ -107,10 +108,10 @@ class SectionScraper:
         res = re.search(f"\n({'|'.join(self.experience_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            headerless: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            content: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
-                headerless = SectionScraper.remove_suffix(headerless, header)
-            return headerless
+                content = SectionScraper.remove_suffix(content, header)
+            return content
         else:
             return "Not Found"
 
@@ -119,10 +120,26 @@ class SectionScraper:
         res = re.search(f"\n({'|'.join(self.education_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            headerless = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            content = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
-                headerless = SectionScraper.remove_suffix(headerless, header)
-            return headerless
+                content = SectionScraper.remove_suffix(content, header)
+            
+            # scrape universities
+            regex: List[str] = []
+            regex.extend(re.findall("university of [a-zA-Z ]+", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ university", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ college", content, re.IGNORECASE))
+            regex.extend(re.findall("college of [a-zA-Z ]+", content, re.IGNORECASE))
+            regex.extend(re.findall("([a-zA-Z ]* institute of [a-zA-Z ]+|[a-zA-Z ]+ institute)", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ high school", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ seminary", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ center", content, re.IGNORECASE))
+            regex.extend(re.findall("[a-zA-Z ]+ training program", content, re.IGNORECASE))
+
+            if regex:
+                return ", ".join(list(set(regex)))
+            else:
+                return "Not Found"
         else:
             return "Not Found"
 
