@@ -94,7 +94,11 @@ class SectionScraper:
             headerless: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
             for header in SectionScraper.sections:
                 headerless = SectionScraper.remove_suffix(headerless, header)
-            return headerless
+            
+            # Transform bullet points to comma separated list
+            output = ", ".join(headerless.strip().split("\n"))
+
+            return output
         else:
             return "Not Found"
 
