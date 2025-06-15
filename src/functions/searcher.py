@@ -119,7 +119,7 @@ class Searcher:
                 for row in records:
                     # if(target_count == 0): break
                     path = row[3]
-                    print("reading ", path)
+                    # print("reading ", path)
                     found = 0;
                     create_new = row[0] not in results
                     if create_new:
