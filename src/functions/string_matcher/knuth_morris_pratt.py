@@ -2,51 +2,54 @@ from functions.string_matcher.string_matcher import StringMatcher
 
 class KnuthMorrisPratt(StringMatcher):
     def __init__(self):
-        self.pattern = ""
-        self.border = []
-        self.m = 0
+        self.preprocessedPattern = {}
 
-    def preprocessPattern(self, pattern):
-        self.pattern = pattern
+    def preprocessPattern(self, patterns):
+        self.preprocessedPattern.clear()
 
-        self.m = len(self.pattern)
-        self.border = [0] * self.m
+        for pattern in patterns:
+            m = len(pattern)
+            border = [0] * m
 
-        j = 0
-        i = 1
-        while i < self.m:
-            if self.pattern[i] == self.pattern[j]:
-                j += 1
-                self.border[i] = j
-                i += 1
-            else:
-                if j != 0:
-                    j = self.border[j - 1]
-                else:
-                    self.border[i] = 0
+            j = 0
+            i = 1
+            while i < m:
+                if pattern[i] == pattern[j]:
+                    j += 1
+                    border[i] = j
                     i += 1
+                else:
+                    if j != 0:
+                        j = border[j - 1]
+                    else:
+                        border[i] = 0
+                        i += 1
+            self.preprocessedPattern[pattern] = border
 
-    def search(self, string):
+    def search(self, pattern, string):
         n = len(string)
+        m = len(pattern)
 
         res = []
 
         i = 0
         j = 0
 
+        border = self.preprocessedPattern[pattern]
+
         while i < n:
-            if string[i] == self.pattern[j]:
+            if string[i] == pattern[j]:
                 i += 1
                 j += 1
 
-                if j == self.m:
+                if j == m:
                     res.append(i - j)
 
-                    j = self.border[j - 1]
+                    j = border[j - 1]
 
             else:
                 if j != 0:
-                    j = self.border[j - 1]
+                    j = border[j - 1]
                 else:
                     i += 1
         return res

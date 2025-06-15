@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
     QScrollArea, QGroupBox, QSizePolicy, QGridLayout
 )
 import os
+import itertools
 import webbrowser
 from PyQt5.QtCore import Qt
 from pages.summary import SummaryWindow
@@ -120,10 +121,10 @@ class CVAnalyzerApp(QWidget):
         elif selected_algo == self.bm_radio:
             self.searcher.set_algorithm(BoyerMoore())
 
-        res, time = self.searcher.search(self.keyword_input.text(), self.topresult_spin.value())
-        for a in res:
+        res, exact_time, fuzzy_time = self.searcher.search(self.keyword_input.text(), self.topresult_spin.value())
+        for a in res.values():
             print(a)
-        print(time)
+        print(exact_time, fuzzy_time)
 
 
         self.all_results = res
@@ -146,14 +147,15 @@ class CVAnalyzerApp(QWidget):
 
         start_index = self.current_page * self.cards_per_page
         end_index = min(start_index + self.cards_per_page, len(self.all_results))
-        results_to_show = self.all_results[start_index:end_index]
+        # results_to_show = dict(list(self.all_results)[start_index:end_index])
+        results_to_show = dict(itertools.islice(self.all_results.items(), start_index, end_index))
 
         for i, data in enumerate(results_to_show):
             try:
                 with self.connection as cursor:
-                    cursor.execute("SELECT * FROM ApplicantProfile WHERE applicant_id = " + str(data[0][1]));
+                    cursor.execute("SELECT * FROM ApplicantProfile WHERE applicant_id = " + str(results_to_show[data]["data"][0]));
                     applicant = cursor.fetchone();
-                    card = self.create_result_card(applicant, data)
+                    card = self.create_result_card(applicant, results_to_show[data])
             except Error as e:
                 # card = self.create_result_card("N/A", data)
                 print(e)
@@ -214,8 +216,11 @@ class CVAnalyzerApp(QWidget):
         layout.setSpacing(6)
 
         name = applicantData[2]
-        match_count = applicationDetail[1]
-        pdf_path = applicationDetail[0][3]
+        occurrences = applicationDetail["occurences"]
+        match_count = 0
+        for val in occurrences.values():
+            match_count += val
+        pdf_path = applicationDetail["data"][2]
 
         name_label = QLabel(f"<b>{name}</b>")
         match_label = QLabel(f"Matched <b>{match_count}</b> keyword(s)")
@@ -225,7 +230,7 @@ class CVAnalyzerApp(QWidget):
         summary_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         view_cv_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        summary_button.clicked.connect(lambda: self.open_summary_window(applicantData, applicationDetail))
+        summary_button.clicked.connect(lambda: self.open_summary_window(applicantData, applicationDetail["data"]))
         view_cv_button.clicked.connect(lambda: self.open_view_cv_window(pdf_path))
 
         btn_layout = QHBoxLayout()
@@ -244,6 +249,6 @@ class CVAnalyzerApp(QWidget):
         self.summary_window.show()
 
     def open_view_cv_window(self, path):
-        webbrowser.open(os.path.abspath("../data/"+path))
+        webbrowser.open(os.path.abspath("../"+path))
         # self.view_cv_window = ViewCVWindow()
         # self.view_cv_window.show()

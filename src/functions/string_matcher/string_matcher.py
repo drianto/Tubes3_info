@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class StringMatcher(ABC):
     @abstractmethod
-    def preprocessPattern(self, pattern):
+    def preprocessPattern(self, patterns):
         pass
 
     @abstractmethod
