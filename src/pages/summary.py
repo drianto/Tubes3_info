@@ -34,15 +34,15 @@ class SummaryWindow(QWidget):
         cv_path = self.applicationDetail[2]
         section_scraper = SectionScraper()
 
-        skills = section_scraper.scrape_skills(cv_path)
+        skills = "Skills:\n\n" + section_scraper.scrape_skills(cv_path)
         skill_box = self.create_section(skills)
         layout.addWidget(skill_box)
 
-        jobs = section_scraper.scrape_experience(cv_path)
+        jobs = "Job History:\n\n" + section_scraper.scrape_experience(cv_path)
         job_box = self.create_section(jobs)
         layout.addWidget(job_box)
 
-        education = section_scraper.scrape_education(cv_path)
+        education = "Education:\n\n" + section_scraper.scrape_education(cv_path)
         edu_box = self.create_section(education)
         layout.addWidget(edu_box)
 

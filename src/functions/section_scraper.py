@@ -63,6 +63,18 @@ class SectionScraper:
         "activities and honors",
         "volunteer associations"
     ]
+
+    def remove_prefix(text: str, prefix: str) -> str:
+        if prefix:
+            if text.lower().startswith(prefix.lower()):
+                return text[len(prefix):]
+        return text
+    
+    def remove_suffix(text: str, suffix: str) -> str:
+        if suffix:
+            if text.lower().endswith(suffix.lower()):
+                return text[:-len(suffix)]
+        return text
     
     def _read(self, cv_path) -> str:
         path = os.path.abspath(f"../{cv_path}")
@@ -76,27 +88,38 @@ class SectionScraper:
 
     def scrape_skills(self, cv_path: str) -> str:
         text = self._read(cv_path)
-        res = re.search(f"\n({'|'.join(self.skill_sections)})\n(.*\n)*?({'|'.join(self.sections)})?(\n|$)", text, re.IGNORECASE)
+        res = re.search(f"\n({'|'.join(self.skill_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            return text[i:j]
+            headerless: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            for header in SectionScraper.sections:
+                headerless = SectionScraper.remove_suffix(headerless, header)
+            return headerless
         else:
-            return ""
+            return "Not Found"
 
     def scrape_experience(self, cv_path: str) -> str:
         text = self._read(cv_path)
-        res = re.search(f"\n({'|'.join(self.experience_sections)})\n(.*\n)*?({'|'.join(self.sections)})?(\n|$)", text, re.IGNORECASE)
+        res = re.search(f"\n({'|'.join(self.experience_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            return text[i:j]
+            headerless: str = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            for header in SectionScraper.sections:
+                headerless = SectionScraper.remove_suffix(headerless, header)
+            return headerless
         else:
-            return ""
+            return "Not Found"
 
     def scrape_education(self, cv_path: str) -> str:
         text = self._read(cv_path)
-        res = re.search(f"\n({'|'.join(self.education_sections)})\n(.*\n)*?({'|'.join(self.sections)})?(\n|$)", text, re.IGNORECASE)
+        res = re.search(f"\n({'|'.join(self.education_sections)})(\n.*)+?(\n({'|'.join(self.sections)})\n|$)", text, re.IGNORECASE)
         if res:
             i, j = res.span()
-            return text[i:j]
+            headerless = SectionScraper.remove_prefix(text[i:j].strip(), res.groups()[0])
+            for header in SectionScraper.sections:
+                headerless = SectionScraper.remove_suffix(headerless, header)
+            return headerless
         else:
-            return ""
+            return "Not Found"
+
+SectionScraper.sections.sort(key=lambda s: len(s), reverse=True)
