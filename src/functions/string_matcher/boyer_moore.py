@@ -30,7 +30,7 @@ class BoyerMoore(StringMatcher):
 
             if j < 0:
                 res.append(i)
-
+                if(i+m >= n): return res
                 idx = ord(string[i+m]) - 32
                 i += (m - (last_occurence[idx] if idx > -1 and idx < 95 else -1) if i+m < n else 1)
             else:

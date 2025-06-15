@@ -121,6 +121,8 @@ class CVAnalyzerApp(QWidget):
 
     def search(self):
 
+        if len(self.keyword_input.text()) == 0: return
+
         selected_algo = self.algo_group.checkedButton()
         if selected_algo == self.kmp_radio:
             self.searcher.set_algorithm(KnuthMorrisPratt())
@@ -132,21 +134,20 @@ class CVAnalyzerApp(QWidget):
             print(a)
         print(exact_time, fuzzy_time)
 
+        time_label = f"Exact Time: {round(exact_time, 2)} ms. Fuzzy Time: {round(fuzzy_time, 2)} ms."
+        self.scan_time_label.setText(time_label)
 
         self.all_results = res
 
         self.current_page = 0
-        self.update_result_view(exact_time, fuzzy_time)
+        self.update_result_view()
 
-    def update_result_view(self, exact_time, fuzzy_time):
+    def update_result_view(self):
         for i in reversed(range(self.result_container.count())):
             widget = self.result_container.itemAt(i).widget()
             if widget:
                 widget.setParent(None)
 
-
-        time_label = f"Exact Time: {round(exact_time, 2)} ms. Fuzzy Time: {round(fuzzy_time, 2)} ms."
-        self.scan_time_label.setText(time_label)
 
         container_layout = QVBoxLayout()
         container_layout.setSpacing(10)

@@ -2,6 +2,7 @@ from mysql.connector import Error
 from connection.db import MySQLConnection
 from functions.string_matcher.string_matcher import StringMatcher
 from functions.levenshtein_fuzzy import LevenshteinFuzzy
+from functions.pdf_reader import PDFReader
 
 import time
 
@@ -13,6 +14,7 @@ class Searcher:
         self.connection = connection;
         self.exact_algo = algo;
         self.fuzzy_algo = LevenshteinFuzzy()
+        self.pdf_reader = PDFReader()
 
     def set_algorithm(self, algo: StringMatcher):
         self.exact_algo = algo;
@@ -34,16 +36,15 @@ class Searcher:
 
                     path = os.path.abspath(f"../{row[3]}")
                     print("reading ", path)
-                    reader = PdfReader(path)
+
+                    text = self.pdf_reader.open_pdf(path)
 
                     occurences = {key: 0 for key in patterns}
                     has_found = False
-                    for page in reader.pages:
-                        text = page.extract_text()
-                        for pattern in patterns:
-                            found = len(self.exact_algo.search(pattern, text))
-                            if(found > 0): has_found = True
-                            occurences[pattern] += found
+                    for pattern in patterns:
+                        found = len(self.exact_algo.search(pattern, text))
+                        if(found > 0): has_found = True
+                        occurences[pattern] += found
 
                     if(has_found):
                         target_count -= 1
@@ -73,16 +74,15 @@ class Searcher:
                     create_new = row[0] not in results
                     if create_new:
                         occurences = {key: 0 for key in patterns}
-                    for page in reader.pages:
-                        for pattern in patterns:
-                            text = page.extract_text()
-                            found = len(self.fuzzy_algo.fuzzy_search(pattern, text))
+                    text = self.pdf_reader.open_pdf(path)
+                    for pattern in patterns:
+                        found = len(self.fuzzy_algo.fuzzy_search(pattern, text))
 
-                            if(found > 0):
-                                if create_new:
-                                    occurences[pattern] += found
-                                else:
-                                    results[row[0]]["occurences"][pattern] += found
+                        if(found > 0):
+                            if create_new:
+                                occurences[pattern] += found
+                            else:
+                                results[row[0]]["occurences"][pattern] += found
 
                     if create_new:
                         results[row[0]] = {"data": row[1:], "occurences": occurences}
@@ -94,7 +94,7 @@ class Searcher:
         return results
 
     def search(self, patterns, target_count):
-        pattern_list = patterns.split(",")
+        pattern_list = [pattern.strip() for pattern in patterns.split(",")]
 
         # do exact matching
         exact_start = time.time()
