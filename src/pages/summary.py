@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
+from functions.section_scraper import SectionScraper
 
 class SummaryWindow(QWidget):
     def __init__(self, applicantData, applicationDetail):
@@ -30,13 +31,19 @@ class SummaryWindow(QWidget):
         info_box = self.create_section(f"{name}\n\nBirthdate: {birth_date}\nAddress: {address}\nPhone: {phone}")
         layout.addWidget(info_box)
 
-        skill_box = self.create_section("Skills:\n\n[ Barak ]   [ OOO ]   [ Kang ]")
+        cv_path = self.applicationDetail[2]
+        section_scraper = SectionScraper()
+
+        skills = "Skills:\n\n" + section_scraper.scrape_skills(cv_path)
+        skill_box = self.create_section(skills)
         layout.addWidget(skill_box)
 
-        job_box = self.create_section("Job History:\n\nGuberneur\n209-2014\nMengirim ke barak")
+        jobs = "Job History:\n\n" + section_scraper.scrape_experience(cv_path)
+        job_box = self.create_section(jobs)
         layout.addWidget(job_box)
 
-        edu_box = self.create_section("Education:\n\nBrak\n2022–2021")
+        education = "Education:\n\n" + section_scraper.scrape_education(cv_path)
+        edu_box = self.create_section(education)
         layout.addWidget(edu_box)
 
         self.setLayout(layout)
