@@ -155,15 +155,16 @@ class Searcher:
         # check total matches
         total_cv_exact = len(res)
         cv_remaining = target_count - total_cv_exact
-        if cv_remaining <= 0:
-            return (res, (exact_end - exact_start) * 1000, 0)
-        print("exact target < target_count")
-        print(total_cv_exact, cv_remaining)
+        fuzzy_end = 0
+        fuzzy_start = 0
+        if cv_remaining > 0:
+            print("exact target < target_count")
+            print(total_cv_exact, cv_remaining)
 
-        # do fuzzy matching if not enough
-        fuzzy_start = time.time()
-        self._fuzzy_match(res, pattern_list, cv_remaining)
-        fuzzy_end = time.time()
+            # do fuzzy matching if not enough
+            fuzzy_start = time.time()
+            self._fuzzy_match(res, pattern_list, cv_remaining)
+            fuzzy_end = time.time()
 
         res = {key: value for key, value in res.items() if sum(value["exact_occurences"].values()) > 0 or sum(value["fuzzy_occurences"].values()) > 0}
         res = dict(sorted(res.items(), key=lambda item: sum(item[1]["exact_occurences"].values()) * 300 + sum(item[1]["fuzzy_occurences"].values()), reverse=True))
