@@ -139,7 +139,9 @@ class SectionScraper:
             for line in lines:
                 for keyword in keywords:
                     if keyword in line.strip():
-                        output.extend(re.findall(f"[A-Z][a-zA-Z ]*{keyword}[a-zA-Z ]*", line.strip()))
+                        i, j = re.search(f"([A-Z][a-zA-Z]* )*{keyword}( [A-Z][a-zA-Z]*)*", line.strip()).span()
+                        print(line[i:j])
+                        output.append(line[i:j])
                         break
                     elif "company name" != line.lower().strip() and "company name" in line.lower().strip():
                         output.append(line)
