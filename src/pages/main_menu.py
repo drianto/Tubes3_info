@@ -161,7 +161,6 @@ class CVAnalyzerApp(QWidget):
             except Error as e:
                 card = None
                 print(e)
-            if (card is None): return
             card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             row, col = i // 2, i % 2
             grid_layout.addWidget(card, row, col)
@@ -244,10 +243,8 @@ class CVAnalyzerApp(QWidget):
         keyword_labels = []
         idx = 1
         found_occurences = {}
-        found_one = False
         for (keyword, count) in exact_occurrences.items():
             if(count > 0):
-                found_one = True
                 label = QLabel(f"{idx}. {keyword}: {count} exact occurrence{'s' if count > 1 else ''}")
                 found_occurences[keyword] = label
                 keyword_labels.append(label)
@@ -255,7 +252,6 @@ class CVAnalyzerApp(QWidget):
         idx = 1
         for (keyword, count) in fuzzy_occurrences.items():
             if(count > 0):
-                found_one = True
                 if(keyword in found_occurences):
                     found_occurences[keyword].setText(found_occurences[keyword].text() + f", {count} fuzzy occurence{'s' if count > 1 else ''}")
                 else:
@@ -263,7 +259,6 @@ class CVAnalyzerApp(QWidget):
                     label = QLabel(f"{idx}. {keyword}: {count} fuzzy occurrence{'s' if count > 1 else ''}")
                     keyword_labels.append(label)
 
-        if not found_one: return None
         summary_button = QPushButton("📄 Summary")
         view_cv_button = QPushButton("👁️ View CV")
 

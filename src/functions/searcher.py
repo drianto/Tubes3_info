@@ -26,7 +26,7 @@ class Searcher:
         results = {}
         try:
             with self.connection as cursor:
-                cursor.execute("SELECT * FROM ApplicationDetail LIMIT 10");
+                cursor.execute("SELECT * FROM ApplicationDetail");
                 records = cursor.fetchall();
 
                 if not records:
@@ -46,7 +46,6 @@ class Searcher:
                     has_found = False
                     for pattern in patterns:
                         found = len(self.exact_algo.search(pattern, text))
-                        print(found)
                         if(found > 0): has_found = True
                         occurences[pattern] += found
 
@@ -110,7 +109,7 @@ class Searcher:
     def _fuzzy_match(self, results, patterns, target_count):
         try:
             with self.connection as cursor:
-                cursor.execute("SELECT * FROM ApplicationDetail LIMIT 10");
+                cursor.execute("SELECT * FROM ApplicationDetail");
                 records = cursor.fetchall();
 
                 if not records:
@@ -166,7 +165,9 @@ class Searcher:
         self._fuzzy_match(res, pattern_list, cv_remaining)
         fuzzy_end = time.time()
 
+        res = {key: value for key, value in res.items() if sum(value["exact_occurences"].values()) > 0 or sum(value["fuzzy_occurences"].values()) > 0}
         res = dict(sorted(res.items(), key=lambda item: sum(item[1]["exact_occurences"].values()) * 300 + sum(item[1]["fuzzy_occurences"].values()), reverse=True))
+
 
         return (res, (exact_end - exact_start) * 1000, (fuzzy_end - fuzzy_start) * 1000)
 
