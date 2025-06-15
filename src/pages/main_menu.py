@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QRadioButton, QButtonGroup, QSpinBox,
-    QScrollArea, QGroupBox, QSizePolicy, QGridLayout
+    QScrollArea, QGroupBox, QSizePolicy, QGridLayout, QGraphicsOpacityEffect
 )
 import os
 import itertools
 import webbrowser
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import (Qt, QPropertyAnimation)
 from pages.summary import SummaryWindow
 
 from mysql.connector import Error
@@ -21,31 +21,14 @@ class CVAnalyzerApp(QWidget):
         super().__init__()
         self.setWindowTitle("Info")
         self.setGeometry(600, 250, 800, 700)
-        self.setStyleSheet("""
-            QWidget {
-                font-family: Segoe UI, sans-serif;
-                font-size: 14px;
-            }
-            QPushButton {
-                background-color: #1976d2;
-                color: white;
-                border-radius: 6px;
-                padding: 6px 12px;
-            }
-            QPushButton:hover {
-                background-color: #1565c0;
-            }
-            QGroupBox {
-                border: 1px solid #ccc;
-                border-radius: 10px;
-                padding: 12px;
-                background-color: #f9f9f9;
-            }
-        """)
+
         self.current_page = 0
         self.cards_per_page = 4
         self.all_results = []
         self.connection = connection
+        self.dark_mode = False
+        self.apply_light_theme()
+
         self.initUI()
 
     def initUI(self):
@@ -54,8 +37,9 @@ class CVAnalyzerApp(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
 
         title = QLabel("Infokan CV")
+        title.setObjectName("TitleLabel")
         title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size: 28px; font-weight: 600; margin-bottom: 10px;")
+        title.setObjectName("TitleLabel")
         main_layout.addWidget(title)
 
         keyword_layout = QHBoxLayout()
@@ -123,6 +107,15 @@ class CVAnalyzerApp(QWidget):
         main_layout.addWidget(self.result_area)
         self.setLayout(main_layout)
 
+        self.theme_toggle_button = QPushButton("🌙 Dark Mode")
+        self.theme_toggle_button.setFixedWidth(120)
+        self.theme_toggle_button.clicked.connect(self.toggle_theme)
+
+        theme_toggle_layout = QHBoxLayout()
+        theme_toggle_layout.addStretch()
+        theme_toggle_layout.addWidget(self.theme_toggle_button)
+        main_layout.addLayout(theme_toggle_layout)
+
     def search(self):
 
         if len(self.keyword_input.text()) == 0: return
@@ -180,6 +173,7 @@ class CVAnalyzerApp(QWidget):
             card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             row, col = i // 2, i % 2
             grid_layout.addWidget(card, row, col)
+            self.fade_in_widget(card)
 
         grid_widget = QWidget()
         grid_widget.setLayout(grid_layout)
@@ -228,6 +222,18 @@ class CVAnalyzerApp(QWidget):
     def go_to_prev_page(self):
         self.current_page -= 1
         self.update_result_view()
+
+    def fade_in_widget(self, widget, duration=400):
+        effect = QGraphicsOpacityEffect()
+        widget.setGraphicsEffect(effect)
+
+        animation = QPropertyAnimation(effect, b"opacity")
+        animation.setDuration(duration)
+        animation.setStartValue(0)
+        animation.setEndValue(1)
+        animation.start()
+
+        widget._fade_animation = animation
 
     def create_result_card(self, applicantData, applicationDetail):
         card = QGroupBox()
@@ -278,3 +284,174 @@ class CVAnalyzerApp(QWidget):
 
     def open_view_cv_window(self, path):
         webbrowser.open(os.path.abspath("../"+path))
+
+    def apply_light_theme(self):
+        self.setStyleSheet("""
+            QWidget {
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 14px;
+                background-color: #f0f4f8;
+                color: #000000;
+            }
+
+            QLabel#TitleLabel {
+                font-size: 28px;
+                font-weight: 700;
+                color: #0d47a1;
+            }
+
+            QLineEdit {
+                padding: 6px 10px;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                background-color: white;
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #1976d2;
+                background-color: #e3f2fd;
+            }
+
+            QPushButton {
+                background-color: #1976d2;
+                color: white;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background-color: #1565c0;
+            }
+
+            QPushButton:disabled {
+                background-color: #90a4ae;
+                color: #eceff1;
+            }
+
+            QGroupBox {
+                border: 1px solid #ddd;
+                border-radius: 12px;
+                padding: 16px;
+                background-color: #ffffff;
+            }
+
+            QRadioButton {
+                padding: 2px 6px;
+            }
+
+            QSpinBox {
+                padding: 4px;
+                border-radius: 6px;
+                background-color: white;
+                border: 1px solid #ccc;
+            }
+
+            QScrollArea {
+                border: none;
+            }
+        """)
+
+    def apply_dark_theme(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #121212;
+                color: #e0e0e0;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 14px;
+            }
+
+            QLabel#TitleLabel {
+                font-size: 28px;
+                font-weight: 700;
+                color: #42a5f5; /* Blue accent */
+            }
+
+            QLineEdit {
+                padding: 6px 10px;
+                border: 1px solid #444;
+                border-radius: 6px;
+                background-color: #1e1e1e;
+                color: #ffffff;
+            }
+                           
+            QRadioButton::indicator {
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;
+                border: 2px solid #ccc;
+                background-color: transparent;
+            }
+
+            QRadioButton::indicator:checked {
+                width: 14px;
+                height: 14px;
+                border: 2px solid #1e88e5; 
+                background-color: white; 
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #42a5f5;
+                background-color: #263238;
+            }
+
+            QPushButton {
+                background-color: #1e88e5;
+                color: white;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background-color: #1565c0;
+            }
+
+            QPushButton:disabled {
+                background-color: #555;
+                color: #888;
+            }
+
+            QGroupBox {
+                border: 1px solid #333;
+                border-radius: 12px;
+                padding: 16px;
+                background-color: #1e1e1e;
+            }
+
+            QRadioButton {
+                padding: 2px 6px;
+                color: #e0e0e0;
+            }
+
+            QRadioButton::indicator:checked {
+                background-color: #42a5f5;
+                border: 1px solid #42a5f5;
+            }
+
+            QSpinBox {
+                padding: 4px;
+                border-radius: 6px;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #333;
+            }
+
+            QScrollArea {
+                border: none;
+                background-color: #121212;
+            }
+
+            QLabel {
+                color: #e0e0e0;
+            }
+        """)
+
+    def toggle_theme(self):
+        self.dark_mode = not self.dark_mode
+        if self.dark_mode:
+            self.apply_dark_theme()
+            self.theme_toggle_button.setText("☀️ Light Mode")
+        else:
+            self.apply_light_theme()
+            self.theme_toggle_button.setText("🌙 Dark Mode")
