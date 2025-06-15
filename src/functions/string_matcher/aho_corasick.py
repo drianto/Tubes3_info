@@ -14,6 +14,7 @@ class AhoCorasick(StringMatcher):
         self.root = None
         self.matches: Dict[str, List[int]] = {}
         self.processed = False
+        self.text = None
 
     def preprocessPattern(self, patterns):
         self.root = _AhoCorasickState()
@@ -55,6 +56,10 @@ class AhoCorasick(StringMatcher):
                     next_node.link = link.transitions[key]
 
     def search(self, pattern, string):
+        if self.text != string:
+            self.text = string
+            self.processed = False
+
         if not self.processed:
             current = self.root
             for i in range(len(string)):
